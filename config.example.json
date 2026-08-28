@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "calendarUrl": "https://gitlab.example.com/users/username/calendar.json",
+  "mirrorRepositoryUrl": "https://github.com/username/contribution-mirror.git",
+  "intervalMinutes": 60,
+  "lookbackDays": 365,
+  "timeZone": "Europe/Berlin",
+  "limits": {
+    "perDay": 1000,
+    "perRun": 20000
+  },
+  "notifications": {
+    "enabled": true,
+    "networkFailureThreshold": 3
+  }
+}
