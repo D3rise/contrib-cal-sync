@@ -1,28 +1,9 @@
 import { chmod, mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
-import type { AppPaths } from './paths.js'
-
-export interface AppConfig {
-  readonly schemaVersion: 1
-  readonly calendarUrl: string
-  readonly mirrorRepositoryUrl: string
-  readonly intervalMinutes: number
-  readonly lookbackDays: number
-  readonly timeZone: string
-  readonly limits: {
-    readonly perDay: number
-    readonly perRun: number
-  }
-  readonly notifications: {
-    readonly enabled: boolean
-    readonly networkFailureThreshold: number
-  }
-  readonly gitIdentity?: {
-    readonly name?: string
-    readonly email?: string
-  }
-}
+import type { ConfigurationPort } from '../../application/sync.ports.js'
+import type { AppConfig } from '../../application/sync.types.js'
+import type { AppPaths } from '../system/paths.js'
 
 export function defaultConfig(): AppConfig {
   return {
@@ -133,4 +114,12 @@ export async function saveConfig(paths: AppPaths, value: unknown): Promise<void>
   await writeFile(temporary, `${JSON.stringify(config, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 })
   await rename(temporary, paths.configFile)
   await chmod(paths.configFile, 0o600)
+}
+
+export class JsonConfigurationAdapter implements ConfigurationPort {
+  constructor(private readonly paths: AppPaths) {}
+
+  load(): Promise<AppConfig> { return loadConfig(this.paths) }
+  save(config: AppConfig): Promise<void> { return saveConfig(this.paths, config) }
+  defaults(): AppConfig { return defaultConfig() }
 }

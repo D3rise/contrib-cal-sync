@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process'
+import type { CredentialKind, CredentialPort } from '../../application/sync.ports.js'
 
-export type CredentialKind = 'gitlab' | 'github'
 export type SecureCommandRunner = (executable: string, args: readonly string[], input?: string) => Promise<string>
 
 const services: Record<CredentialKind, string> = {
@@ -22,7 +22,7 @@ export const secureCommandRunner: SecureCommandRunner = (executable, args, input
   child.stdin.end(input)
 })
 
-export class CredentialStore {
+export class KeychainCredentialAdapter implements CredentialPort {
   constructor(private readonly runner: SecureCommandRunner = secureCommandRunner) {}
 
   async set(kind: CredentialKind, secret: string): Promise<void> {

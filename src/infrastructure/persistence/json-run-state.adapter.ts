@@ -1,18 +1,11 @@
 import { mkdir, open, readFile, rename, unlink, writeFile, type FileHandle } from 'node:fs/promises'
 import path from 'node:path'
-
-export interface RunState {
-  readonly consecutiveNetworkFailures: number
-  readonly failureNotified: boolean
-  readonly lastOutcome: 'never' | 'success' | 'failure'
-  readonly lastRunAt?: string
-  readonly lastError?: string
-  readonly lastCommitCount?: number
-}
+import type { RunLockPort, RunStatePort } from '../../application/sync.ports.js'
+import type { RunState } from '../../application/sync.types.js'
 
 const initialState: RunState = { consecutiveNetworkFailures: 0, failureNotified: false, lastOutcome: 'never' }
 
-export class RunStateStore {
+export class JsonRunStateAdapter implements RunStatePort {
   constructor(private readonly file: string) {}
 
   async read(): Promise<RunState> {
@@ -61,7 +54,7 @@ export class RunStateStore {
   }
 }
 
-export class RunLock {
+export class FileRunLockAdapter implements RunLockPort {
   private handle: FileHandle | undefined
   constructor(private readonly file: string) {}
 

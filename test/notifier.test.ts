@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { MacNotifier } from '../src/notifier.js'
+import { MacNotificationAdapter } from '../src/infrastructure/macos/notification.adapter.js'
 
 test('launches the native helper with a Retry action and no shell interpolation', async () => {
   const calls: Array<{ executable: string; args: readonly string[] }> = []
-  const notifier = new MacNotifier('/Applications/ContributionNotifier.app', '/Users/alice/.local/bin/contrib-cal-sync', async (executable, args) => {
+  const notifier = new MacNotificationAdapter('/Applications/ContributionNotifier.app', '/Users/alice/.local/bin/contrib-cal-sync', async (executable, args) => {
     calls.push({ executable, args })
   })
   await notifier.send('Source unavailable', true)
@@ -19,7 +19,7 @@ test('launches the native helper with a Retry action and no shell interpolation'
 
 test('omits the retry command for recovery notifications', async () => {
   const calls: string[][] = []
-  const notifier = new MacNotifier('/Applications/ContributionNotifier.app', '/cli', async (_executable, args) => { calls.push([...args]) })
+  const notifier = new MacNotificationAdapter('/Applications/ContributionNotifier.app', '/cli', async (_executable, args) => { calls.push([...args]) })
   await notifier.send('Recovered', false)
   assert.ok(!calls[0]?.includes('--retry-command'))
 })

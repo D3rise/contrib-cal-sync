@@ -1,15 +1,13 @@
-import { appendFile, mkdir, rm, writeFile } from 'node:fs/promises'
+import { appendFile, chmod, mkdir, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
-import type { ContributionCalendar } from './calendar.js'
-import type { MirrorPlanItem } from './reconcile.js'
-import { runCommand } from './process.js'
-import { contributionTimestamp } from './time.js'
-
-export interface CommitIdentity {
-  readonly name: string
-  readonly email: string
-}
+import type { MirrorRepositoryFactoryPort, MirrorRepositoryPort } from '../../application/sync.ports.js'
+import type { AppConfig, CommitIdentity, MirrorPlanItem } from '../../application/sync.types.js'
+import type { ContributionCalendar } from '../../domain/contribution-calendar.js'
+import { contributionTimestamp } from '../../domain/contribution-time.js'
+import type { GitHubApiClient } from '../github/github-api.client.js'
+import type { AppPaths } from '../system/paths.js'
+import { runCommand } from '../system/process-runner.js'
 
 export interface GitMirrorOptions {
   readonly repositoryUrl: string
@@ -20,16 +18,16 @@ export interface GitMirrorOptions {
 
 const markerTrailer = 'Contrib-Cal-Sync: 1'
 
-export class GitMirror {
+export class GitMirrorRepository implements MirrorRepositoryPort {
   private constructor(
     readonly workDir: string,
     private readonly defaultBranch: string,
     private readonly environment: NodeJS.ProcessEnv
   ) {}
 
-  static async clone(options: GitMirrorOptions): Promise<GitMirror> {
+  static async clone(options: GitMirrorOptions): Promise<GitMirrorRepository> {
     await runCommand('git', ['clone', '--no-tags', options.repositoryUrl, options.workDir], options.environment === undefined ? {} : { env: options.environment })
-    const mirror = new GitMirror(options.workDir, options.defaultBranch, options.environment ?? process.env)
+    const mirror = new GitMirrorRepository(options.workDir, options.defaultBranch, options.environment ?? process.env)
     if (await mirror.hasHead()) await mirror.git(['switch', options.defaultBranch])
     return mirror
   }
@@ -103,5 +101,41 @@ export class GitMirror {
 
   async cleanup(): Promise<void> {
     await rm(this.workDir, { recursive: true, force: true })
+  }
+}
+
+export async function createAskpass(directory: string): Promise<string> {
+  await mkdir(directory, { recursive: true, mode: 0o700 })
+  const file = path.join(directory, 'github-askpass.sh')
+  await writeFile(file, `#!/bin/sh
+case "$1" in
+  *Username*) printf '%s' 'x-access-token' ;;
+  *) printf '%s' "$CONTRIB_CAL_SYNC_GITHUB_TOKEN" ;;
+esac
+`, { mode: 0o700 })
+  await chmod(file, 0o700)
+  return file
+}
+
+export class GitMirrorRepositoryFactory implements MirrorRepositoryFactoryPort {
+  constructor(private readonly paths: AppPaths, private readonly github: GitHubApiClient) {}
+
+  async open(config: AppConfig, token: string): Promise<MirrorRepositoryPort> {
+    await mkdir(this.paths.cacheDir, { recursive: true, mode: 0o700 })
+    const workDir = path.join(this.paths.cacheDir, `run-${process.pid}-${Date.now()}`)
+    const askpass = await createAskpass(this.paths.root)
+    const defaultBranch = await this.github.defaultBranch(config.mirrorRepositoryUrl, token)
+    return GitMirrorRepository.clone({
+      repositoryUrl: config.mirrorRepositoryUrl,
+      workDir,
+      defaultBranch,
+      environment: {
+        ...process.env,
+        CONTRIB_CAL_SYNC_GITHUB_TOKEN: token,
+        GIT_ASKPASS: askpass,
+        GIT_ASKPASS_REQUIRE: 'force',
+        GIT_TERMINAL_PROMPT: '0'
+      }
+    })
   }
 }

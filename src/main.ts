@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { runCli } from './cli.js'
-import { createCliDependencies } from './runtime.js'
+import 'reflect-metadata'
+import { CliController } from './presentation/cli/cli.controller.js'
+import { createContainer } from './composition/container.js'
 
-process.exitCode = await runCli(process.argv.slice(2), createCliDependencies())
+process.exitCode = await createContainer().get(CliController).execute(process.argv.slice(2))

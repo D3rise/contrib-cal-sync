@@ -17,7 +17,13 @@ test('installs a staged version and user CLI without changing configuration', as
   const bin = path.join(home, 'fake-bin')
   await mkdir(bin)
   const node = path.join(bin, 'node')
-  await writeFile(node, '#!/bin/sh\necho v22.12.0\n')
+  await writeFile(node, `#!/bin/sh
+if [ "$1" = "--version" ]; then
+  echo v22.12.0
+else
+  exec "${process.execPath}" "$@"
+fi
+`)
   await chmod(node, 0o755)
 
   await exec('bash', ['scripts/install.sh', '--no-config'], {
@@ -27,7 +33,14 @@ test('installs a staged version and user CLI without changing configuration', as
 
   const root = path.join(home, 'Library', 'Application Support', 'contrib-cal-sync')
   assert.match(await readlink(path.join(root, 'current')), /versions\/1\.0\.0-/)
-  assert.match(await readFile(path.join(home, '.local', 'bin', 'contrib-cal-sync'), 'utf8'), /current\/dist\/main\.js/)
+  const cli = path.join(home, '.local', 'bin', 'contrib-cal-sync')
+  assert.match(await readFile(cli, 'utf8'), /current\/dist\/main\.js/)
+  const current = await readlink(path.join(root, 'current'))
+  assert.equal(await exists(path.join(root, current, 'node_modules', 'inversify', 'package.json')), true)
+  await assert.rejects(exec(cli, ['unknown']), (error: unknown) => {
+    const failure = error as { code?: number; stdout?: string }
+    return failure.code === 2 && failure.stdout?.includes('Usage:') === true
+  })
   await assert.rejects(readFile(path.join(root, 'config.json'), 'utf8'), /ENOENT/)
 })
 

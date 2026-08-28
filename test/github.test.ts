@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { deriveNoreplyEmail, getGitHubIdentity, parseGitHubRepositoryUrl } from '../src/github.js'
+import { deriveNoreplyEmail, getGitHubIdentity, parseGitHubRepositoryUrl } from '../src/infrastructure/github/github-api.client.js'
 
 test('parses only a standalone github.com repository URL', () => {
   assert.deepEqual(parseGitHubRepositoryUrl('https://github.com/Octo-Cat/mirror.git'), {

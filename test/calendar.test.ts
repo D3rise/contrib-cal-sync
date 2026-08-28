@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { CalendarFetchError, fetchCalendar, parseCalendarJson } from '../src/calendar.js'
+import { SourceResponseError, SourceUnavailableError } from '../src/application/errors.js'
+import { parseContributionCalendar as parseCalendarJson } from '../src/domain/contribution-calendar.js'
+import { fetchCalendar } from '../src/infrastructure/source/gitlab-calendar.adapter.js'
 
 test('parses a calendar date-to-count object', () => {
   assert.deepEqual(parseCalendarJson({ '2026-06-03': 2, '2026-07-02': 84, '2026-08-28': 1 }), {
@@ -41,13 +43,13 @@ test('classifies an unavailable source as transient without exposing the URL', a
     fetchCalendar('https://gitlab.example.com/users/alice/calendar.json', 'secret-value', async () => {
       throw new TypeError('fetch failed')
     }),
-    (error: unknown) => error instanceof CalendarFetchError && error.transient && !error.message.includes('gitlab.example.com')
+    (error: unknown) => error instanceof SourceUnavailableError && !error.message.includes('gitlab.example.com')
   )
 })
 
 test('classifies authentication failure as permanent', async () => {
   await assert.rejects(
     fetchCalendar('https://gitlab.example.com/users/alice/calendar.json', 'secret-value', async () => new Response('', { status: 401 })),
-    (error: unknown) => error instanceof CalendarFetchError && !error.transient
+    (error: unknown) => error instanceof SourceResponseError
   )
 })

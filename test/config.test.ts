@@ -4,8 +4,8 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
 
-import { defaultConfig, loadConfig, parseConfig, saveConfig } from '../src/config.js'
-import { resolvePaths } from '../src/paths.js'
+import { defaultConfig, loadConfig, parseConfig, saveConfig } from '../src/infrastructure/configuration/json-configuration.adapter.js'
+import { resolvePaths } from '../src/infrastructure/system/paths.js'
 
 const validConfig = {
   ...defaultConfig(),

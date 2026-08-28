@@ -1,4 +1,4 @@
-import type { ContributionCalendar } from './calendar.js'
+import type { ContributionCalendar } from './contribution-calendar.js'
 
 export interface MirrorPlanItem {
   readonly date: string
@@ -16,7 +16,7 @@ function lookbackStart(today: string, lookbackDays: number): string {
   return date.toISOString().slice(0, 10)
 }
 
-export function planMirror(
+export function createMirrorPlan(
   source: ContributionCalendar,
   mirrored: ContributionCalendar,
   limits: MirrorLimits,
@@ -40,6 +40,5 @@ export function planMirror(
     }
     plan.push({ date, count: missing })
   }
-
   return plan
 }

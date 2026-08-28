@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { contributionTimestamp } from '../src/time.js'
+import { contributionTimestamp } from '../src/domain/contribution-time.js'
 
 test('timestamps a contribution at noon with the Moscow offset', () => {
   assert.equal(contributionTimestamp('2026-08-28', 'Europe/Moscow'), '2026-08-28T12:00:00+03:00')

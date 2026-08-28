@@ -6,7 +6,7 @@ import path from 'node:path'
 import { promisify } from 'node:util'
 import test from 'node:test'
 
-import { GitMirror } from '../src/git.js'
+import { GitMirrorRepository } from '../src/infrastructure/git/git-mirror.repository.js'
 
 const exec = promisify(execFile)
 
@@ -33,7 +33,7 @@ async function fixtureWithOrdinaryCommit(): Promise<{ root: string; remote: stri
 
 test('counts only marked mirror commits and preserves ordinary history', async () => {
   const { root, remote } = await fixtureWithOrdinaryCommit()
-  const mirror = await GitMirror.clone({ repositoryUrl: remote, workDir: path.join(root, 'work'), defaultBranch: 'main' })
+  const mirror = await GitMirrorRepository.clone({ repositoryUrl: remote, workDir: path.join(root, 'work'), defaultBranch: 'main' })
 
   await mirror.createCommits(
     [{ date: '2026-08-28', count: 2 }],
@@ -51,7 +51,7 @@ test('initializes and pushes a completely empty repository', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'contrib-cal-empty-'))
   const remote = path.join(root, 'remote.git')
   await git(root, 'init', '--bare', '--initial-branch=main', remote)
-  const mirror = await GitMirror.clone({ repositoryUrl: remote, workDir: path.join(root, 'work'), defaultBranch: 'main' })
+  const mirror = await GitMirrorRepository.clone({ repositoryUrl: remote, workDir: path.join(root, 'work'), defaultBranch: 'main' })
 
   await mirror.initializeEmptyRepository()
   await mirror.push()

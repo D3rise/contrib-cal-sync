@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { createLaunchAgentPlist } from '../src/launchd.js'
+import { createLaunchAgentPlist } from '../src/infrastructure/macos/launchd.adapter.js'
 
 test('creates an hourly per-user launch agent with absolute program paths', () => {
   const plist = createLaunchAgentPlist({

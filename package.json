@@ -10,10 +10,12 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "clean:build": "node --input-type=module -e \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true })\"",
+    "build": "npm run clean:build && tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
-    "test": "tsc -p tsconfig.test.json && node --test --test-reporter=spec .test-dist/test/*.test.js",
+    "clean:test": "node --input-type=module -e \"import { rmSync } from 'node:fs'; rmSync('.test-dist', { recursive: true, force: true })\"",
+    "test": "npm run clean:test && tsc -p tsconfig.test.json && node --test --test-reporter=spec .test-dist/test",
     "build:helper": "bash scripts/build-helper.sh"
   },
   "license": "ISC",
@@ -23,5 +25,9 @@
     "eslint": "^10.9.1",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.68.0"
+  },
+  "dependencies": {
+    "inversify": "^8.2.3",
+    "reflect-metadata": "^0.2.2"
   }
 }

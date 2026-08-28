@@ -1,3 +1,6 @@
+import type { DestinationIdentityPort } from '../../application/sync.ports.js'
+import type { AppConfig, CommitIdentity } from '../../application/sync.types.js'
+
 export interface GitHubRepository {
   readonly owner: string
   readonly repository: string
@@ -59,4 +62,28 @@ export async function getDefaultBranch(repository: GitHubRepository, token: stri
   if (!response.ok) throw new Error(`GitHub rejected the repository request with HTTP ${response.status}.`)
   const value = await response.json() as Record<string, unknown>
   return typeof value.default_branch === 'string' && value.default_branch !== '' ? value.default_branch : 'main'
+}
+
+export class GitHubApiClient {
+  constructor(private readonly fetchImpl: typeof fetch = fetch) {}
+
+  identity(token: string): Promise<GitHubIdentity> {
+    return getGitHubIdentity(token, this.fetchImpl)
+  }
+
+  defaultBranch(repositoryUrl: string, token: string): Promise<string> {
+    return getDefaultBranch(parseGitHubRepositoryUrl(repositoryUrl), token, this.fetchImpl)
+  }
+}
+
+export class GitHubDestinationIdentityAdapter implements DestinationIdentityPort {
+  constructor(private readonly api: GitHubApiClient) {}
+
+  async resolve(config: AppConfig, token: string): Promise<CommitIdentity> {
+    const identity = await this.api.identity(token)
+    return {
+      name: config.gitIdentity?.name ?? identity.name ?? identity.login,
+      email: config.gitIdentity?.email ?? deriveNoreplyEmail(identity)
+    }
+  }
 }

@@ -98,6 +98,23 @@ contrib-cal-sync service restart
 
 Changing `intervalMinutes` through the CLI validates the value and reloads the LaunchAgent. `config show` reports only whether each credential exists; it never prints a secret.
 
+## Architecture
+
+The source is organized as inward-pointing layers:
+
+```text
+src/
+├── domain/          pure calendar, reconciliation, and contribution-time rules
+├── application/     ContributionSyncService, use-case types, and capability ports
+├── infrastructure/  Git, HTTP, GitHub, Keychain, files, logging, and macOS adapters
+├── presentation/    CLI controller, console I/O, and command handlers
+└── composition/     the only InversifyJS container and concrete bindings
+```
+
+`ContributionSyncService.execute()` is the main application interface. It owns the complete synchronization workflow—locking, bounded retries, reconciliation, commit creation, push, state transitions, notifications, logging, and cleanup—while command handlers only translate CLI input and output.
+
+Dependencies point inward: presentation and infrastructure depend on application-owned interfaces, application depends on the domain, and the domain has no framework dependencies. InversifyJS is deliberately confined to the composition root; services and adapters use ordinary constructor injection and can be tested without a container. ESLint rules enforce these boundaries.
+
 ## Mirroring behavior
 
 The source endpoint must return one JSON object whose keys are ISO calendar dates and whose values are non-negative integer contribution counts:

@@ -1,10 +1,11 @@
-import { runCommand } from './process.js'
+import type { NotificationPort } from '../../application/sync.ports.js'
+import { runCommand } from '../system/process-runner.js'
 
 export type NotificationRunner = (executable: string, args: readonly string[]) => Promise<void>
 
 const defaultRunner: NotificationRunner = async (executable, args) => { await runCommand(executable, args) }
 
-export class MacNotifier {
+export class MacNotificationAdapter implements NotificationPort {
   constructor(
     private readonly appPath: string,
     private readonly cliPath: string,

@@ -6,7 +6,9 @@ import path from 'node:path'
 import { promisify } from 'node:util'
 import test from 'node:test'
 
-import { activateAfterConfirmation, createAskpass, todayInTimeZone } from '../src/runtime.js'
+import { createAskpass } from '../src/infrastructure/git/git-mirror.repository.js'
+import { todayInTimeZone } from '../src/infrastructure/system/system-clock.adapter.js'
+import { activateAfterConfirmation } from '../src/presentation/cli/handlers/setup.handler.js'
 
 const exec = promisify(execFile)
 

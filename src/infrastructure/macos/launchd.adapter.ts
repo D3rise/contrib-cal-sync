@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
-import { runCommand } from './process.js'
+import { runCommand } from '../system/process-runner.js'
 
 export interface LaunchAgentOptions {
   readonly nodePath: string

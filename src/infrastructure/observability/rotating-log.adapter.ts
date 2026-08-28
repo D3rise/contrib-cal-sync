@@ -1,5 +1,6 @@
 import { mkdir, rename, stat, writeFile } from 'node:fs/promises'
 import path from 'node:path'
+import type { LogPort } from '../../application/sync.ports.js'
 
 export interface LoggerOptions {
   readonly maxBytes: number
@@ -7,7 +8,7 @@ export interface LoggerOptions {
   readonly secrets?: readonly string[]
 }
 
-export class RotatingLogger {
+export class RotatingLogAdapter implements LogPort {
   constructor(private readonly file: string, private readonly options: LoggerOptions) {}
 
   private redact(value: string): string {

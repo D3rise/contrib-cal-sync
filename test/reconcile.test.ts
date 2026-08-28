@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { planMirror } from '../src/reconcile.js'
+import { createMirrorPlan as planMirror } from '../src/domain/reconciliation.js'
 
 const limits = { perDay: 1_000, perRun: 20_000 }
 
