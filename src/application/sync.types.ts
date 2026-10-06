@@ -3,6 +3,7 @@ import type { MirrorLimits, MirrorPlanItem } from '../domain/reconciliation.js'
 export interface AppConfig {
   readonly schemaVersion: 1
   readonly calendarUrl: string
+  readonly calendarAuth?: 'pat' | 'session'
   readonly mirrorRepositoryUrl: string
   readonly intervalMinutes: number
   readonly lookbackDays: number

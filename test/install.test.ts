@@ -42,6 +42,13 @@ fi
     return failure.code === 2 && failure.stdout?.includes('Usage:') === true
   })
   await assert.rejects(readFile(path.join(root, 'config.json'), 'utf8'), /ENOENT/)
+
+  await exec('bash', ['scripts/install.sh', '--no-config'], {
+    cwd: process.cwd(),
+    env: { ...process.env, HOME: home, CONTRIB_CAL_SYNC_NODE: node, CONTRIB_CAL_SYNC_SKIP_BUILD: '1' }
+  })
+  assert.notEqual(await readlink(path.join(root, 'current')), current, 'an update must activate the new release')
+  assert.equal(await exists(path.join(root, current, 'current.new')), false)
 })
 
 test('rejects Node.js older than version 22 before changing the installation', async () => {

@@ -26,8 +26,20 @@ export class KeychainCredentialAdapter implements CredentialPort {
   constructor(private readonly runner: SecureCommandRunner = secureCommandRunner) {}
 
   async set(kind: CredentialKind, secret: string): Promise<void> {
-    if (secret.trim() === '') throw new Error('Credential cannot be empty.')
-    await this.runner('/usr/bin/security', ['add-generic-password', '-U', '-a', 'default', '-s', services[kind], '-w'], `${secret.trim()}\n`)
+    const value = secret.trim()
+    if (value === '') throw new Error('Credential cannot be empty.')
+    if (/[\r\n\0]/.test(value)) throw new Error('Credential must be a single line without null bytes.')
+    // The -w prompt reads from the terminal, not the child's stdin. Instead,
+    // send a quoted command to security's interpreter, keeping secrets out of argv.
+    const quoted = `"${value.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`
+    try {
+      await this.runner('/usr/bin/security', ['-i'], `add-generic-password -U -a default -s ${services[kind]} -w ${quoted}\n`)
+      // Interactive security can exit successfully even when a command failed.
+      if (await this.get(kind) !== value) throw new Error('Credential did not round-trip.')
+    } catch {
+      // Do not expose interpreter output: it may contain the submitted command.
+      throw new Error(`Unable to save and verify ${kind} credential in macOS Keychain.`)
+    }
   }
 
   async get(kind: CredentialKind): Promise<string> {

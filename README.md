@@ -25,6 +25,15 @@ Prepare two credentials:
 
 Both tokens are entered through hidden prompts and stored as generic passwords in the user's macOS Keychain. They are not written to `config.json`, command-line arguments, Git remotes, or logs.
 
+Some GitLab installations do not accept personal access tokens on the profile calendar route: the API authenticates successfully, but `calendar.json` returns `{}` while the browser shows contributions. In that case, use the existing browser session:
+
+```bash
+contrib-cal-sync config set calendarAuth session
+contrib-cal-sync credentials set gitlab
+```
+
+At the hidden `gitlab token:` prompt, enter only the value of the `_gitlab_session` cookie from the authenticated GitLab site's browser developer tools (Application → Cookies). The value stays in Keychain and is sent only as a cookie header to the configured HTTPS endpoint. Renew it through the same command when the browser session expires. To return to personal access tokens, set `calendarAuth` to `pat` and save the token again. Calendar requests do not follow redirects, so credentials cannot be forwarded to a different host.
+
 For commits from a private mirror repository to appear on the profile graph, enable private contribution visibility in GitHub profile settings. GitHub can take up to 24 hours to refresh the graph. The commit email must also belong to the account; by default, the service derives the account's GitHub-provided `noreply` address from the authenticated identity.
 
 ## Install

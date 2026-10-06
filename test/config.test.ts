@@ -26,6 +26,10 @@ test('rejects an interval shorter than fifteen minutes', () => {
   assert.throws(() => parseConfig({ ...validConfig, intervalMinutes: 14 }), /at least 15/)
 })
 
+test('rejects unsupported calendar authentication modes', () => {
+  assert.throws(() => parseConfig({ ...validConfig, calendarAuth: 'unknown' }), /calendarAuth/)
+})
+
 test('rejects an invalid IANA time zone', () => {
   assert.throws(() => parseConfig({ ...validConfig, timeZone: 'Moon/Sea' }), /timeZone/)
 })

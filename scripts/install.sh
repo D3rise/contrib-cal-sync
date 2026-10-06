@@ -90,7 +90,7 @@ rollback() {
   if [[ "$ACTIVATED" == "true" ]]; then
     if [[ -n "$OLD_TARGET" ]]; then
       ln -s "$OLD_TARGET" "$CURRENT_LINK.rollback"
-      mv -f "$CURRENT_LINK.rollback" "$CURRENT_LINK"
+      mv -fh "$CURRENT_LINK.rollback" "$CURRENT_LINK"
     else
       rm -f "$CURRENT_LINK"
       rm -f "$CLI_FILE"
@@ -121,7 +121,8 @@ cp -R "$PROJECT_DIR/node_modules/reflect-metadata" "$STAGE_DIR/node_modules/refl
 mv "$STAGE_DIR" "$RELEASE_DIR"
 
 ln -s "versions/$RELEASE_NAME" "$CURRENT_LINK.new"
-mv -f "$CURRENT_LINK.new" "$CURRENT_LINK"
+# On macOS, -h replaces the symlink itself instead of moving into its target.
+mv -fh "$CURRENT_LINK.new" "$CURRENT_LINK"
 ACTIVATED=true
 
 {

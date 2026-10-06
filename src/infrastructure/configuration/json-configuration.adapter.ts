@@ -9,6 +9,7 @@ export function defaultConfig(): AppConfig {
   return {
     schemaVersion: 1,
     calendarUrl: '',
+    calendarAuth: 'pat',
     mirrorRepositoryUrl: '',
     intervalMinutes: 60,
     lookbackDays: 365,
@@ -72,10 +73,13 @@ export function parseConfig(value: unknown): AppConfig {
     throw new Error('mirrorRepositoryUrl must point to GitHub')
   }
   if (input.schemaVersion !== 1) throw new Error('schemaVersion must be 1')
+  const calendarAuth = input.calendarAuth ?? 'pat'
+  if (calendarAuth !== 'pat' && calendarAuth !== 'session') throw new Error('calendarAuth must be pat or session')
 
   const base: AppConfig = {
     schemaVersion: 1,
     calendarUrl: httpsUrl(input.calendarUrl, 'calendarUrl'),
+    calendarAuth,
     mirrorRepositoryUrl: repositoryUrl,
     intervalMinutes,
     lookbackDays: integer(input.lookbackDays, 'lookbackDays', 1, 1_095),

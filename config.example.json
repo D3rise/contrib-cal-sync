@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "calendarUrl": "https://gitlab.example.com/users/username/calendar.json",
+  "calendarAuth": "pat",
   "mirrorRepositoryUrl": "https://github.com/username/contribution-mirror.git",
   "intervalMinutes": 60,
   "lookbackDays": 365,

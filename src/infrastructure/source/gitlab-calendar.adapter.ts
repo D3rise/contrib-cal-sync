@@ -6,13 +6,23 @@ import { parseContributionCalendar, type ContributionCalendar } from '../../doma
 export async function fetchCalendar(
   calendarUrl: string,
   token: string,
-  fetchImpl: typeof fetch = fetch
+  fetchImpl: typeof fetch = fetch,
+  authentication: AppConfig['calendarAuth'] = 'pat'
 ): Promise<ContributionCalendar> {
+  const headers = new Headers({ accept: 'application/json' })
+  if (authentication === 'session') {
+    if (!/^[\x21\x23-\x2b\x2d-\x3a\x3c-\x5b\x5d-\x7e]+$/.test(token)) {
+      throw new SourceResponseError('GitLab session must contain only the _gitlab_session cookie value.')
+    }
+    headers.set('cookie', `_gitlab_session=${token}`)
+  } else {
+    headers.set('private-token', token)
+  }
   let response: Response
   try {
     response = await fetchImpl(calendarUrl, {
-      headers: { accept: 'application/json', 'private-token': token },
-      redirect: 'follow',
+      headers,
+      redirect: 'error',
       signal: AbortSignal.timeout(30_000)
     })
   } catch (cause) {
@@ -38,6 +48,6 @@ export class GitLabCalendarAdapter implements ContributionSourcePort {
   constructor(private readonly fetchImpl: typeof fetch = fetch) {}
 
   load(config: AppConfig, token: string): Promise<ContributionCalendar> {
-    return fetchCalendar(config.calendarUrl, token, this.fetchImpl)
+    return fetchCalendar(config.calendarUrl, token, this.fetchImpl, config.calendarAuth)
   }
 }
